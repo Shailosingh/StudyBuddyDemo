@@ -38,6 +38,17 @@ namespace StudyBuddyDemo
 
         public MainWindow()
         {
+            //Check the user's roaming data and check if it has the folder for Study Buddy
+            string userPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string studyBuddySavesPath = Path.Combine(userPath, @"Study Buddy Saves");
+
+            //If it isn't there, make the folder
+            bool directoryExists = Directory.Exists(studyBuddySavesPath);
+            if (!directoryExists)
+            {
+                Directory.CreateDirectory(studyBuddySavesPath);
+            }
+
             //Set the size of window taking into account DPI (https://stackoverflow.com/questions/67169712/winui-3-0-reunion-0-5-window-size)
             IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
@@ -58,10 +69,11 @@ namespace StudyBuddyDemo
             StudyState = new StudySession();
 
             //Load the Pet object
-            //PetState = new Pet();
+            PetState = new Pet();
 
             //Display window
             this.InitializeComponent();
+            StatusReport.Text = PetState.ToString();
         }
 
         //Methods------------------------------------------------------------------------------------------------------------------
@@ -190,6 +202,9 @@ namespace StudyBuddyDemo
                             //Record final time studied
                             TimeSpan timeStudied = StudyState.Timer.Elapsed;
 
+                            //Give the pet coins earned
+                            ulong coinsEarned = GivePetCoins(timeStudied);
+
                             //Reset the timer
                             StudyState.Timer.Reset();
 
@@ -201,7 +216,7 @@ namespace StudyBuddyDemo
                             {
                                 FocusSelect.IsEnabled = true;
                                 StudyButton.Content = "Start Studying";
-                                StatusReport.Text = $"Total time studying {timeStudied}";
+                                StatusReport.Text = $"Total time studying {timeStudied}.\n Earned {coinsEarned} Coins";
                             });
 
                             //Break out of foreach loop to avoid the thread continuing to try to end processes
@@ -220,6 +235,18 @@ namespace StudyBuddyDemo
 
         }
 
+        private ulong GivePetCoins(TimeSpan timeStudied)
+        {
+            //Calculate total number of coins
+            ulong coinsEarned = (ulong)timeStudied.TotalMinutes;
+
+            //Give pet coins
+            PetState.AddFunds(coinsEarned);
+
+            //Return the new coins earned
+            return coinsEarned;
+        }
+
         //Event Handlers-----------------------------------------------------------------------------------------------------------
         private void StudyButton_Click(object sender, RoutedEventArgs e)
         {
@@ -235,6 +262,9 @@ namespace StudyBuddyDemo
                 //Record final time studied
                 TimeSpan timeStudied = StudyState.Timer.Elapsed;
 
+                //Give the pet coins earned
+                ulong coinsEarned = GivePetCoins(timeStudied);
+
                 //Reset the timer
                 StudyState.Timer.Reset();
 
@@ -245,7 +275,7 @@ namespace StudyBuddyDemo
                 //Reset UI
                 FocusSelect.IsEnabled = true;
                 StudyButton.Content = "Start Studying";
-                StatusReport.Text = $"Total time studying {timeStudied}";
+                StatusReport.Text = $"Total time studying {timeStudied}.\n Earned {coinsEarned} Coins";
             }
 
         }

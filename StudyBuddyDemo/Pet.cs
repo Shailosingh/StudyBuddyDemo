@@ -27,11 +27,11 @@ namespace StudyBuddyDemo
         //Constructor for pet
         public Pet()
         {
-            //Check the Saves folder and check if a save for the pet is already there
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string petSavePath = Path.Combine(currentDirectory, @"Saves\PetSave.json");
+            //Check the user's roaming data and check if it has PetSave file
+            string userPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string petSavePath = Path.Combine(userPath, @"Study Buddy Saves\PetSave.json");
 
-            if(File.Exists(petSavePath))
+            if (File.Exists(petSavePath))
             {
                 //Deserialize file into object
                 string petFileString = File.ReadAllText(petSavePath);
@@ -54,10 +54,20 @@ namespace StudyBuddyDemo
                 this.Hat = "";
                 this.Furniture = "";
 
-                //Serialize this into a save file
+                //Serialize this into the save file
                 string petFileString = JsonConvert.SerializeObject(this, Formatting.Indented);
                 File.WriteAllText(petSavePath, petFileString);
             }
+        }
+
+        [JsonConstructor]
+        private Pet(ulong balance, string glasses, string top, string hat, string furniture)
+        {
+            this.Balance = balance;
+            this.Glasses = glasses;
+            this.Top = top;
+            this.Hat = hat;
+            this.Furniture = furniture;
         }
 
         //Getters
@@ -91,6 +101,9 @@ namespace StudyBuddyDemo
             {
                 Balance = ulong.MaxValue;
             }
+
+            //Save the pet's data
+            SavePetFile();
         }
 
         /// <summary>
@@ -100,18 +113,37 @@ namespace StudyBuddyDemo
         /// <returns>If the withdraw was successful</returns>
         public bool SubractFunds(ulong withdraw)
         {
+            //Initialize variables
+            bool success;
             //Calculate if the withdraw is too much for the balance
             if (withdraw < Balance)
             {
-                return false;
+                success = false;
             }
 
             //Withdraw money if possible
             else
             {
                 Balance -= withdraw;
-                return true;
+                success = true;
             }
+
+            //Save the pet's data
+            SavePetFile();
+
+            //Return if the withdraw was successful or not
+            return success;
+        }
+
+        private void SavePetFile()
+        {
+            //Get the path for the save file
+            string userPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string petSavePath = Path.Combine(userPath, @"Study Buddy Saves\PetSave.json");
+
+            //Serialize this into the save file
+            string petFileString = JsonConvert.SerializeObject(this, Formatting.Indented);
+            File.WriteAllText(petSavePath, petFileString);
         }
 
         public override string ToString()
