@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "StudyBuddyDemo (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "StudyBuddyDemo (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

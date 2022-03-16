@@ -1,0 +1,31 @@
+﻿<Window
+    x:Class="StudyBuddyDemo.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:StudyBuddyDemo"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">
+        <StackPanel Orientation="Horizontal">
+            <Button Width="640" Height="100" Content="Test 1" HorizontalAlignment="Left"/>
+            <Button Width="640" Height="100" Content="Test 1" HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <Canvas Width="1280" Height="470"  Background="Gray">
+        </Canvas>
+
+        <Canvas Width="1280" Height="150" Background="Black">
+            <Border BorderThickness="2" Width="880" Height="150" BorderBrush="White" Canvas.Left="2">
+                <TextBlock x:Name="StatusReport" Text="Waiting..."/>
+            </Border>
+
+            <StackPanel Orientation="Vertical" Canvas.Left="885">
+                <ToggleSwitch x:Name="FocusSelect" Header="Focus Mode" OffContent="Off" OnContent="On" IsOn="True" HorizontalAlignment="Center"/>
+                <Button x:Name="StudyButton" Click="StudyButton_Click"  Content="Start Studying" Margin="5, 10, 5, 0" HorizontalAlignment="Center" Width="380" Height="70"/>
+            </StackPanel>
+
+        </Canvas>
+    </StackPanel>
+</Window>
