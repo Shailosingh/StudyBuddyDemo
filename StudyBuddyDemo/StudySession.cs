@@ -16,6 +16,7 @@ namespace StudyBuddyDemo
         public bool StudyThreadRunning { get; set; }
         public Thread StudyThread { get; set; }
         public Stopwatch Timer { get; set; }
+        public Stopwatch DistractedTimer { get; set; }
         public ContentDialogResult DialogResult { get; set; }
 
         //Constructor
@@ -24,6 +25,7 @@ namespace StudyBuddyDemo
             IsInFocusMode = true;
             StudyThreadRunning = false;
             Timer = new Stopwatch();
+            DistractedTimer = new Stopwatch();
             DialogResult = ContentDialogResult.None;
         }
     }

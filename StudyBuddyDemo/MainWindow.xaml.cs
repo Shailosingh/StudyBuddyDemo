@@ -16,6 +16,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using PInvoke;
+using System.Text;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -47,6 +48,14 @@ namespace StudyBuddyDemo
             if (!directoryExists)
             {
                 Directory.CreateDirectory(studyBuddySavesPath);
+            }
+
+            //Check if the folder for day records exist
+            string dateRecordSavePaths = Path.Combine(studyBuddySavesPath, @"Date Records");
+            directoryExists = Directory.Exists(dateRecordSavePaths);
+            if(!directoryExists)
+            {
+                Directory.CreateDirectory(dateRecordSavePaths);
             }
 
             //Set the size of window taking into account DPI (https://stackoverflow.com/questions/67169712/winui-3-0-reunion-0-5-window-size)
@@ -85,7 +94,7 @@ namespace StudyBuddyDemo
         /// <returns>An array of the names of the blacklisted processes</returns>
         private string[] GetBlacklistedProcesses()
         {
-            string[] blacklistedProcesses = { "Discord", "chrome" };
+            string[] blacklistedProcesses = { "chrome", "Discord", "Spotify" };
             return blacklistedProcesses;
         }
 
@@ -107,13 +116,17 @@ namespace StudyBuddyDemo
                 StudyState.StudyThread = new Thread(FocusModeThread);
 
                 //Give user message
-                StatusReport.Text = "Focus Mode Engaged! It is time to work both hard and smart. Good luck...";
+                StatusReport.Text = "Focus Mode Engaged! Programs you are distracted by shall be listed below:\n";
             }
 
             //Casual mode
             else
             {
+                //Initialize the study thread
+                StudyState.StudyThread = new Thread(CasualModeThread);
 
+                //Give user message
+                StatusReport.Text = "Casual Mode Engaged! Distractions:\n";
             }
 
             //Start the study thread
@@ -232,7 +245,63 @@ namespace StudyBuddyDemo
         /// </summary>
         private void CasualModeThread()
         {
+            //Initialize variables
+            Process[] unauthorizedProcesses;
+            string[] blacklist = GetBlacklistedProcesses();
+            int numberOfUnauthorizedProcessRunning = 0;
+            Dictionary<string, bool> processesThatDistractedUser = new Dictionary<string, bool>();
 
+            //Setup dictionary to record which processes distracted the user
+            foreach(string blacklistedProcess in blacklist)
+            {
+                processesThatDistractedUser.Add(blacklistedProcess, false);
+            }
+
+            //Study loop
+            while(StudyState.StudyThreadRunning)
+            {
+                //Go through every process in the blacklist and search for open processes
+                foreach (string blacklistedProcess in blacklist)
+                {
+                    //Get list of unauthorized processes
+                    unauthorizedProcesses = Process.GetProcessesByName(blacklistedProcess);
+
+                    //If this list isn't empty, mark this process as a process that distracted user and enable distraction timer
+                    if (unauthorizedProcesses.Length != 0)
+                    {
+                        if(!processesThatDistractedUser[blacklistedProcess])
+                        {
+                            processesThatDistractedUser[blacklistedProcess] = true;
+                            
+                            this.DispatcherQueue.TryEnqueue(() =>
+                            {
+                                StatusReport.Text += $"- {blacklistedProcess}\n";
+                            });
+
+                            if (numberOfUnauthorizedProcessRunning == 0)
+                            {
+                                StudyState.DistractedTimer.Start();
+                            }
+
+                            numberOfUnauthorizedProcessRunning++;
+                        }
+                    }
+
+                    else
+                    {
+                        if (processesThatDistractedUser[blacklistedProcess])
+                        {
+                            numberOfUnauthorizedProcessRunning--;
+                            processesThatDistractedUser[blacklistedProcess] = false;
+
+                            if (numberOfUnauthorizedProcessRunning == 0)
+                            {
+                                StudyState.DistractedTimer.Stop();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private ulong GivePetCoins(TimeSpan timeStudied)
@@ -259,23 +328,56 @@ namespace StudyBuddyDemo
             //User clicked stop studying button
             else
             {
-                //Record final time studied
-                TimeSpan timeStudied = StudyState.Timer.Elapsed;
+                if(StudyState.IsInFocusMode)
+                {
+                    //Record final time studied
+                    TimeSpan timeStudied = StudyState.Timer.Elapsed;
 
-                //Give the pet coins earned
-                ulong coinsEarned = GivePetCoins(timeStudied);
+                    //Give the pet coins earned
+                    ulong coinsEarned = GivePetCoins(timeStudied);
 
-                //Reset the timer
-                StudyState.Timer.Reset();
+                    //Reset the timer
+                    StudyState.Timer.Reset();
 
-                //Stop the study thread
-                StudyState.StudyThreadRunning = false;
-                StudyState.StudyThread.Join();
+                    //Stop the study thread
+                    StudyState.StudyThreadRunning = false;
+                    StudyState.StudyThread.Join();
 
-                //Reset UI
-                FocusSelect.IsEnabled = true;
-                StudyButton.Content = "Start Studying";
-                StatusReport.Text = $"Total time studying {timeStudied}.\n Earned {coinsEarned} Coins";
+                    //Reset UI
+                    FocusSelect.IsEnabled = true;
+                    StudyButton.Content = "Start Studying";
+                    string statusReportText = $"Total time studying {timeStudied}.\n" +
+                                              $"Earned {coinsEarned} Coins";
+                    StatusReport.Text = statusReportText;
+                }
+
+                else
+                {
+                    //Record net time studied
+                    TimeSpan timeStudied = StudyState.Timer.Elapsed;
+                    TimeSpan distractedTime = StudyState.DistractedTimer.Elapsed;
+                    TimeSpan netTimeStudied = timeStudied - distractedTime;
+
+                    //Give the pet coins earned
+                    ulong coinsEarned = GivePetCoins(netTimeStudied);
+
+                    //Reset the timer
+                    StudyState.Timer.Reset();
+                    StudyState.DistractedTimer.Reset();
+
+                    //Stop the study thread
+                    StudyState.StudyThreadRunning = false;
+                    StudyState.StudyThread.Join();
+
+                    //Reset UI
+                    FocusSelect.IsEnabled = true;
+                    StudyButton.Content = "Start Studying";
+                    string statusReportText = $"Total time studying: {timeStudied}\n" +
+                                              $"Time Distracted: {distractedTime}\n" +
+                                              $"Net Time: {netTimeStudied}\n" +
+                                              $"Earned {coinsEarned} Coins";
+                    StatusReport.Text = statusReportText;
+                }
             }
 
         }
