@@ -116,7 +116,7 @@ namespace StudyBuddyDemo
                 StudyState.StudyThread = new Thread(FocusModeThread);
 
                 //Give user message
-                StatusReport.Text = "Focus Mode Engaged! Programs you are distracted by shall be listed below:\n";
+                StatusReport.Text = "Focus Mode Engaged! It is time to work both hard and smart. Good luck...";
             }
 
             //Casual mode
@@ -215,11 +215,16 @@ namespace StudyBuddyDemo
                             //Record final time studied
                             TimeSpan timeStudied = StudyState.Timer.Elapsed;
 
-                            //Give the pet coins earned
-                            ulong coinsEarned = GivePetCoins(timeStudied);
-
                             //Reset the timer
                             StudyState.Timer.Reset();
+
+                            //Give the pet coins earned
+                            ulong coinsEarned = GivePetCoins(timeStudied);
+                            
+                            //Update the today's record
+                            DayRecord todayRecord = new DayRecord();
+                            todayRecord.AddTimeStudied(timeStudied);
+                            todayRecord.IncrementFunds(coinsEarned);
 
                             //Signal the study thread to stop
                             StudyState.StudyThreadRunning = false;
@@ -333,11 +338,16 @@ namespace StudyBuddyDemo
                     //Record final time studied
                     TimeSpan timeStudied = StudyState.Timer.Elapsed;
 
+                    //Reset the timer
+                    StudyState.Timer.Reset();
+
                     //Give the pet coins earned
                     ulong coinsEarned = GivePetCoins(timeStudied);
 
-                    //Reset the timer
-                    StudyState.Timer.Reset();
+                    //Update the today's record
+                    DayRecord todayRecord = new DayRecord();
+                    todayRecord.AddTimeStudied(timeStudied);
+                    todayRecord.IncrementFunds(coinsEarned);
 
                     //Stop the study thread
                     StudyState.StudyThreadRunning = false;
@@ -358,12 +368,17 @@ namespace StudyBuddyDemo
                     TimeSpan distractedTime = StudyState.DistractedTimer.Elapsed;
                     TimeSpan netTimeStudied = timeStudied - distractedTime;
 
-                    //Give the pet coins earned
-                    ulong coinsEarned = GivePetCoins(netTimeStudied);
-
                     //Reset the timer
                     StudyState.Timer.Reset();
                     StudyState.DistractedTimer.Reset();
+
+                    //Give the pet coins earned
+                    ulong coinsEarned = GivePetCoins(netTimeStudied);
+
+                    //Update the today's record
+                    DayRecord todayRecord = new DayRecord();
+                    todayRecord.AddTimeStudied(timeStudied);
+                    todayRecord.IncrementFunds(coinsEarned);
 
                     //Stop the study thread
                     StudyState.StudyThreadRunning = false;

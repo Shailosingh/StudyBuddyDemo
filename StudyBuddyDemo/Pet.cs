@@ -135,6 +135,9 @@ namespace StudyBuddyDemo
             return success;
         }
 
+        /// <summary>
+        /// Saves current object into the PetSave file
+        /// </summary>
         private void SavePetFile()
         {
             //Get the path for the save file
