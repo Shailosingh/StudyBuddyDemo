@@ -37,8 +37,8 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Images\Menu\" />
     <Folder Include="Items\Furniture\" />
     <Folder Include="Items\Clothes\" />
-    <Folder Include="Images\" />
   </ItemGroup>
 </Project>

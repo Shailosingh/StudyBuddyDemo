@@ -14,7 +14,7 @@ namespace StudyBuddyDemo
     {
         //Datafields
         [JsonProperty]
-        private ulong Balance;
+        private long Balance;
         [JsonProperty]
         private string Hat;
         [JsonProperty]
@@ -22,7 +22,13 @@ namespace StudyBuddyDemo
         [JsonProperty]
         private string Top;
         [JsonProperty]
-        private string Furniture;
+        private string Bed;
+        [JsonProperty]
+        private string Table;
+        [JsonProperty]
+        private string Nightstand;
+        [JsonProperty]
+        private string Window;
 
         //Constructor for pet
         public Pet()
@@ -42,7 +48,10 @@ namespace StudyBuddyDemo
                 this.Glasses = petObject.Glasses;
                 this.Top = petObject.Top;
                 this.Hat = petObject.Hat;
-                this.Furniture = petObject.Furniture;
+                this.Bed = petObject.Bed;
+                this.Table = petObject.Table;  
+                this.Window = petObject.Window;
+                this.Nightstand = petObject.Nightstand;
             }
 
             else
@@ -52,7 +61,10 @@ namespace StudyBuddyDemo
                 this.Glasses = "";
                 this.Top = "";
                 this.Hat = "";
-                this.Furniture = "";
+                this.Bed = "";
+                this.Table = "";
+                this.Window = "";
+                this.Nightstand = "";
 
                 //Serialize this into the save file
                 string petFileString = JsonConvert.SerializeObject(this, Formatting.Indented);
@@ -61,13 +73,16 @@ namespace StudyBuddyDemo
         }
 
         [JsonConstructor]
-        private Pet(ulong balance, string glasses, string top, string hat, string furniture)
+        private Pet(long balance, string glasses, string top, string hat, string bed, string table, string nightstand, string window)
         {
             this.Balance = balance;
             this.Glasses = glasses;
             this.Top = top;
             this.Hat = hat;
-            this.Furniture = furniture;
+            this.Bed = bed;
+            this.Table = table;
+            this.Nightstand = nightstand;
+            this.Window = window;
         }
 
         //Getters
@@ -75,63 +90,59 @@ namespace StudyBuddyDemo
         /// Getter for balance
         /// </summary>
         /// <returns>Balance of wallet</returns>
-        public ulong GetBalance()
+        public long GetBalance()
         {
             return Balance;
         }
 
         //Methods
         /// <summary>
-        /// Adds however deposit number of coins to pet
+        /// Update the balance of the pet
         /// </summary>
-        /// <param name="deposit">Number of coins to be added to pet</param>
-        public void AddFunds(ulong deposit)
-        {
-            //Calculate if the deposit will overflow the balance
-            ulong remainingUntilMax = ulong.MaxValue - Balance;
-
-            //If it will not overflow, deposit the money simply
-            if (remainingUntilMax > deposit)
-            {
-                Balance += deposit;
-            }
-
-            //If it will overflow, set the wallet to max
-            else
-            {
-                Balance = ulong.MaxValue;
-            }
-
-            //Save the pet's data
-            SavePetFile();
-        }
-
-        /// <summary>
-        /// Withdraws specified number of coins from pet
-        /// </summary>
-        /// <param name="withdraw">Number of coins to be removed</param>
-        /// <returns>If the withdraw was successful</returns>
-        public bool SubractFunds(ulong withdraw)
+        /// <param name="coins">Number of coins to be added/removed from pet's balance</param>
+        public bool UpdateFunds(long coins)
         {
             //Initialize variables
-            bool success;
-            //Calculate if the withdraw is too much for the balance
-            if (withdraw < Balance)
+            bool success = true;
+
+            //Check if it is a deposit or a withdraw
+            if (coins > 0)
             {
-                success = false;
+                //Calculate if the deposit will overflow the balance
+                long remainingUntilMax = long.MaxValue - Balance;
+
+                //If it will not overflow, deposit the money simply
+                if (remainingUntilMax > coins)
+                {
+                    Balance += coins;
+                }
+
+                //If it will overflow, set the wallet to max
+                else
+                {
+                    Balance = long.MaxValue;
+                }
             }
 
-            //Withdraw money if possible
-            else
+            else if(coins < 0)
             {
-                Balance -= withdraw;
-                success = true;
+                //Calculate if the withdraw is too much for the balance
+                if (coins < Balance)
+                {
+                    success = false;
+                }
+
+                //Withdraw money if possible
+                else
+                {
+                    Balance -= coins;
+                }
             }
 
             //Save the pet's data
             SavePetFile();
 
-            //Return if the withdraw was successful or not
+            //Return if it was successful
             return success;
         }
 
@@ -155,7 +166,10 @@ namespace StudyBuddyDemo
                                   $"Hat: {Hat}\n" +
                                   $"Glasses: {Glasses}\n" +
                                   $"Top: {Top}\n" +
-                                  $"Furniture: {Furniture}";
+                                  $"Bed: {Bed}\n" +
+                                  $"Table: {Table}\n" +
+                                  $"Nightstand: {Nightstand}\n" +
+                                  $"Window: {Window}";
 
             return outputString;
         }

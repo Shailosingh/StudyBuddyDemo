@@ -11,9 +11,12 @@ namespace StudyBuddyDemo
     public class DayRecord
     {
         //Datafields
+        [JsonProperty]
         public TimeSpan TimeStudiedToday { get; set; }
-        public DateOnly Date { get; set; }
-        public ulong TodaysBalance { get; set; }
+        [JsonProperty]
+        public string Date { get; set; }
+        [JsonProperty]
+        public long TodaysBalance { get; set; }
 
         //Constructor
         public DayRecord()
@@ -41,7 +44,7 @@ namespace StudyBuddyDemo
             else
             {
                 //Setup initial values
-                this.Date = DateOnly.FromDateTime(DateTime.Now);
+                this.Date = DateOnly.FromDateTime(DateTime.Now).ToString("MM-dd-yyyy");
                 this.TimeStudiedToday = new TimeSpan();
                 this.TodaysBalance = 0;
 
@@ -52,7 +55,7 @@ namespace StudyBuddyDemo
         }
 
         [JsonConstructor]
-        public DayRecord(TimeSpan timeStudiedToday, DateOnly date, ulong todaysBalance)
+        public DayRecord(TimeSpan timeStudiedToday, string date, long todaysBalance)
         {
             this.Date = date;
             this.TimeStudiedToday = timeStudiedToday;
@@ -70,23 +73,22 @@ namespace StudyBuddyDemo
         }
 
         /// <summary>
-        /// Increments today's balance record
+        /// Increments today's balance record (Accepts negatives)
         /// </summary>
-        /// <param name="newFund">New coins earned</param>
-        public void IncrementFunds(ulong newFund)
+        /// <param name="newFund">New coins earned or withdrawn</param>
+        public void IncrementFunds(long newFund)
         {
             this.TodaysBalance += newFund;
             SaveDayFile();
         }
 
-        /// <summary>
-        /// Decrements today's balance record
-        /// </summary>
-        /// <param name="removedFunds">Coins that were removed from wallet</param>
-        public void DecrementFunds(ulong removedFunds)
+        public override string ToString()
         {
-            this.TodaysBalance -= removedFunds;
-            SaveDayFile();
+            string stringOutput = $"{DateOnly.ParseExact(Date, "MM-dd-yyyy").ToLongDateString()}:\n" +
+                                  $"Time Studied: {TimeStudiedToday}\n" +
+                                  $"Coins Earned: {TodaysBalance} Coins";
+
+            return stringOutput;
         }
 
         /// <summary>
@@ -98,7 +100,7 @@ namespace StudyBuddyDemo
             string userPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string studyBuddySavesPath = Path.Combine(userPath, @"Study Buddy Saves");
             string dateRecordSavePaths = Path.Combine(studyBuddySavesPath, @"Date Records");
-            string todayDatePath = Path.Combine(dateRecordSavePaths, $@"{this.Date.ToString("MM-dd-yyyy")}.json");
+            string todayDatePath = Path.Combine(dateRecordSavePaths, $@"{this.Date}.json");
 
             //Serialize this into the save file
             string dayRecordString = JsonConvert.SerializeObject(this, Formatting.Indented);

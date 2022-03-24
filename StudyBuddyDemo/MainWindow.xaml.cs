@@ -17,6 +17,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using PInvoke;
 using System.Text;
+using Newtonsoft.Json;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -219,7 +220,7 @@ namespace StudyBuddyDemo
                             StudyState.Timer.Reset();
 
                             //Give the pet coins earned
-                            ulong coinsEarned = GivePetCoins(timeStudied);
+                            long coinsEarned = GivePetCoins(timeStudied);
                             
                             //Update the today's record
                             DayRecord todayRecord = new DayRecord();
@@ -309,13 +310,13 @@ namespace StudyBuddyDemo
             }
         }
 
-        private ulong GivePetCoins(TimeSpan timeStudied)
+        private long GivePetCoins(TimeSpan timeStudied)
         {
             //Calculate total number of coins
-            ulong coinsEarned = (ulong)timeStudied.TotalMinutes;
+            long coinsEarned = (long)timeStudied.TotalMinutes;
 
             //Give pet coins
-            PetState.AddFunds(coinsEarned);
+            PetState.UpdateFunds(coinsEarned);
 
             //Return the new coins earned
             return coinsEarned;
@@ -342,7 +343,7 @@ namespace StudyBuddyDemo
                     StudyState.Timer.Reset();
 
                     //Give the pet coins earned
-                    ulong coinsEarned = GivePetCoins(timeStudied);
+                    long coinsEarned = GivePetCoins(timeStudied);
 
                     //Update the today's record
                     DayRecord todayRecord = new DayRecord();
@@ -373,7 +374,7 @@ namespace StudyBuddyDemo
                     StudyState.DistractedTimer.Reset();
 
                     //Give the pet coins earned
-                    ulong coinsEarned = GivePetCoins(netTimeStudied);
+                    long coinsEarned = GivePetCoins(netTimeStudied);
 
                     //Update the today's record
                     DayRecord todayRecord = new DayRecord();
@@ -395,6 +396,42 @@ namespace StudyBuddyDemo
                 }
             }
 
+        }
+
+        private void DateReviewPicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
+        {
+            //Get currently selected date offset
+            DateTimeOffset? selectedDateOffset = DateReviewPicker.Date;
+            
+            //Ensure it has a value
+            if(selectedDateOffset.HasValue)
+            {
+                //When it does, convert this value to a DateOnly
+                DateOnly selectedDate = DateOnly.FromDateTime(selectedDateOffset.Value.Date);
+
+                //Try to retrieve record for selected date
+                string userPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string studyBuddySavesPath = Path.Combine(userPath, @"Study Buddy Saves");
+                string dateRecordSavePaths = Path.Combine(studyBuddySavesPath, @"Date Records");
+                string dayDatePath = Path.Combine(dateRecordSavePaths, $@"{selectedDate.ToString("MM-dd-yyyy")}.json");
+
+                //If found, output info to status report
+                if(File.Exists(dayDatePath))
+                {
+                    //Deserialize file into object
+                    string dayRecordString = File.ReadAllText(dayDatePath);
+                    DayRecord dayObject = JsonConvert.DeserializeObject<DayRecord>(dayRecordString);
+
+                    //Output to the StatusReport
+                    StatusReport.Text = dayObject.ToString();
+                }
+
+                //If not found, inform user
+                else
+                {
+                    StatusReport.Text = $"No information for {selectedDate.ToLongDateString()}";
+                }
+            }
         }
     }
 }

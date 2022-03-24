@@ -8,12 +8,8 @@
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">
-        <StackPanel Orientation="Horizontal">
-            <Button Width="640" Height="100" Content="Test 1" HorizontalAlignment="Left"/>
-            <Button Width="640" Height="100" Content="Test 1" HorizontalAlignment="Left"/>
-        </StackPanel>
-
-        <Canvas Width="1280" Height="470"  Background="Gray">
+        <Canvas Width="1280" Height="570"  Background="Gray">
+            <CalendarDatePicker x:Name="DateReviewPicker" PlaceholderText="Review Date" DateChanged="DateReviewPicker_DateChanged" Height="40" Width="125" Canvas.Left="1130" Canvas.Top="50"/>
         </Canvas>
 
         <Canvas Width="1280" Height="150" Background="Black">
