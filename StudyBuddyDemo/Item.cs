@@ -12,11 +12,5 @@ namespace StudyBuddyDemo
         private string Name;
         private ulong Price;
         private bool IsPurchased;
-
-        //Constructor
-        public Item(string name)
-        {
-
-        }
     }
 }
