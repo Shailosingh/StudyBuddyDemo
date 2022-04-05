@@ -174,8 +174,8 @@ namespace StudyBuddyDemo
                             ContentDialog processKillConfirm = new ContentDialog()
                             {
                                 Title = "Distraction Detected",
-                                Content = $"Are you sure you want to kill {blacklistedProcess}",
-                                PrimaryButtonText = "Kill process and continue studying",
+                                Content = $"Are you sure you want to terminate {blacklistedProcess}?",
+                                PrimaryButtonText = "Terminate process and continue studying",
                                 SecondaryButtonText = "Stop studying"
                             };
 
