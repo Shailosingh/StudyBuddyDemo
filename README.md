@@ -18,3 +18,18 @@ While much of the core study functionality was completed, due to lack of time no
 ![image](https://cdn.discordapp.com/attachments/896439329998651432/961092896868671599/unknown.png)
 
 ![image](https://cdn.discordapp.com/attachments/896439329998651432/961093110761394236/unknown.png)
+
+# Credits
+Shailendra Singh
+
+Adam Scott
+
+Riley Huston
+
+Christine Nguyen
+
+Terry Tran
+
+Tatiana Olenciuc
+
+Alex Lau
