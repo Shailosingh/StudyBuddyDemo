@@ -9,7 +9,9 @@
 
     <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">
         <Canvas Width="1280" Height="570"  Background="Gray">
-            <CalendarDatePicker x:Name="DateReviewPicker" PlaceholderText="Review Date" DateChanged="DateReviewPicker_DateChanged" Height="40" Width="125" Canvas.Left="1130" Canvas.Top="50"/>
+            <Image Source="/Images/Coin.png" Height="40" Width="40" Canvas.Left="0" Canvas.Top="50"/>
+            <TextBlock x:Name="CoinCount" Text="0" Foreground="Gold" FontSize="25" Canvas.Left="50" Canvas.Top="52"/>
+            <CalendarDatePicker x:Name="DateReviewPicker" Background="DarkSlateGray" PlaceholderText="Review Date" DateChanged="DateReviewPicker_DateChanged" Height="40" Width="125" Canvas.Left="1130" Canvas.Top="50"/>
         </Canvas>
 
         <Canvas Width="1280" Height="150" Background="Black">

@@ -105,7 +105,8 @@ namespace StudyBuddyDemo
 
             //Display window
             this.InitializeComponent();
-            StatusReport.Text = PetState.ToString();
+            StatusReport.Text = "Welcome To Study Buddy!";
+            CoinCount.Text = PetState.GetBalance().ToString();
         }
 
         //Methods------------------------------------------------------------------------------------------------------------------
@@ -258,6 +259,7 @@ namespace StudyBuddyDemo
                                 FocusSelect.IsEnabled = true;
                                 StudyButton.Content = "Start Studying";
                                 StatusReport.Text = $"Total time studying {timeStudied}.\n Earned {coinsEarned} Coins";
+                                CoinCount.Text = PetState.GetBalance().ToString();
                             });
 
                             //Break out of foreach loop to avoid the thread continuing to try to end processes
@@ -382,6 +384,7 @@ namespace StudyBuddyDemo
                     string statusReportText = $"Total time studying {timeStudied}.\n" +
                                               $"Earned {coinsEarned} Coins";
                     StatusReport.Text = statusReportText;
+                    CoinCount.Text = PetState.GetBalance().ToString();
                 }
 
                 else
@@ -415,6 +418,7 @@ namespace StudyBuddyDemo
                                               $"Net Time: {netTimeStudied}\n" +
                                               $"Earned {coinsEarned} Coins";
                     StatusReport.Text = statusReportText;
+                    CoinCount.Text = PetState.GetBalance().ToString();
                 }
             }
 
