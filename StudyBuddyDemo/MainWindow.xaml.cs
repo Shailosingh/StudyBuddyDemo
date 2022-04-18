@@ -107,6 +107,9 @@ namespace StudyBuddyDemo
             this.InitializeComponent();
             StatusReport.Text = "Welcome To Study Buddy!";
             CoinCount.Text = PetState.GetBalance().ToString();
+
+            //Create exit handler
+            this.Closed += MainWindow_Closed;
         }
 
         //Methods------------------------------------------------------------------------------------------------------------------
@@ -236,31 +239,8 @@ namespace StudyBuddyDemo
                         //User chose to end study session
                         else if (StudyState.DialogResult == ContentDialogResult.Secondary)
                         {
-                            //Record final time studied
-                            TimeSpan timeStudied = StudyState.Timer.Elapsed;
-
-                            //Reset the timer
-                            StudyState.Timer.Reset();
-
-                            //Give the pet coins earned
-                            long coinsEarned = GivePetCoins(timeStudied);
-                            
-                            //Update the today's record
-                            DayRecord todayRecord = new DayRecord();
-                            todayRecord.AddTimeStudied(timeStudied);
-                            todayRecord.IncrementFunds(coinsEarned);
-
-                            //Signal the study thread to stop
-                            StudyState.StudyThreadRunning = false;
-
-                            //Reset UI
-                            this.DispatcherQueue.TryEnqueue(() =>
-                            {
-                                FocusSelect.IsEnabled = true;
-                                StudyButton.Content = "Start Studying";
-                                StatusReport.Text = $"Total time studying {timeStudied}.\n Earned {coinsEarned} Coins";
-                                CoinCount.Text = PetState.GetBalance().ToString();
-                            });
+                            //Exits the focus mode thread, using true to signal we are currently in the focus thread
+                            FocusModeExit(true);
 
                             //Break out of foreach loop to avoid the thread continuing to try to end processes
                             break;
@@ -334,6 +314,104 @@ namespace StudyBuddyDemo
             }
         }
 
+        /// <summary>
+        /// Will exit the Focus Mode and go back to the normal state. This will exit it, regardless of if the function
+        /// is called within the focus thread or the main thread. However, the parameter given must be correct.
+        /// </summary>
+        /// <param name="inFocusThread">True if the method is called within the focus thread, false if otherwise.</param>
+        private void FocusModeExit(bool inFocusThread)
+        {
+            //Record final time studied
+            TimeSpan timeStudied = StudyState.Timer.Elapsed;
+
+            //Reset the timer
+            StudyState.Timer.Reset();
+
+            //Give the pet coins earned
+            long coinsEarned = GivePetCoins(timeStudied);
+
+            //Signal the current study thread to stop
+            StudyState.StudyThreadRunning = false;
+
+            //If we are not currently inside the focus thread, it must be joined
+            if(!inFocusThread)
+            {
+                StudyState.StudyThread.Join();
+            }
+
+            //Update the today's record
+            DayRecord todayRecord = new DayRecord();
+            todayRecord.AddTimeStudied(timeStudied);
+            todayRecord.IncrementFunds(coinsEarned);
+
+            //Reset UI from within the focus thread
+            if(inFocusThread)
+            {
+                this.DispatcherQueue.TryEnqueue(() =>
+                {
+                    FocusSelect.IsEnabled = true;
+                    StudyButton.Content = "Start Studying";
+                    string statusReportText = $"Total time studying {timeStudied}.\n" +
+                                          $"Earned {coinsEarned} Coins";
+                    StatusReport.Text = statusReportText;
+                    CoinCount.Text = PetState.GetBalance().ToString();
+                });
+            }
+
+            //If we are currently in the main UI thread already
+            else
+            {
+                FocusSelect.IsEnabled = true;
+                StudyButton.Content = "Start Studying";
+                string statusReportText = $"Total time studying {timeStudied}.\n" +
+                                          $"Earned {coinsEarned} Coins";
+                StatusReport.Text = statusReportText;
+                CoinCount.Text = PetState.GetBalance().ToString();
+            }
+        }
+
+        /// <summary>
+        /// Exits the casual mode and returns to the main mode, from outside of the casual thread.
+        /// </summary>
+        private void CasualModeExit()
+        {
+            //Record net time studied
+            TimeSpan timeStudied = StudyState.Timer.Elapsed;
+            TimeSpan distractedTime = StudyState.DistractedTimer.Elapsed;
+            TimeSpan netTimeStudied = timeStudied - distractedTime;
+
+            //Reset the timer
+            StudyState.Timer.Reset();
+            StudyState.DistractedTimer.Reset();
+
+            //Give the pet coins earned
+            long coinsEarned = GivePetCoins(netTimeStudied);
+
+            //Update the today's record
+            DayRecord todayRecord = new DayRecord();
+            todayRecord.AddTimeStudied(timeStudied);
+            todayRecord.IncrementFunds(coinsEarned);
+
+            //Stop the study thread
+            StudyState.StudyThreadRunning = false;
+            StudyState.StudyThread.Join();
+
+            //Reset UI
+            FocusSelect.IsEnabled = true;
+            StudyButton.Content = "Start Studying";
+            string statusReportText = $"Total time studying: {timeStudied}\n" +
+                                      $"Time Distracted: {distractedTime}\n" +
+                                      $"Net Time: {netTimeStudied}\n" +
+                                      $"Earned {coinsEarned} Coins";
+            StatusReport.Text = statusReportText;
+            CoinCount.Text = PetState.GetBalance().ToString();
+        }
+
+        /// <summary>
+        /// Gives pet coins based on how much time was studied undistracted
+        /// </summary>
+        /// <param name="timeStudied">The time the user spent studying undistracted</param>
+        /// <returns>How much coins were given</returns>
         private long GivePetCoins(TimeSpan timeStudied)
         {
             //Calculate total number of coins
@@ -358,67 +436,18 @@ namespace StudyBuddyDemo
             //User clicked stop studying button
             else
             {
+                //If the study thread is in focus mode
                 if(StudyState.IsInFocusMode)
                 {
-                    //Record final time studied
-                    TimeSpan timeStudied = StudyState.Timer.Elapsed;
-
-                    //Reset the timer
-                    StudyState.Timer.Reset();
-
-                    //Give the pet coins earned
-                    long coinsEarned = GivePetCoins(timeStudied);
-
-                    //Update the today's record
-                    DayRecord todayRecord = new DayRecord();
-                    todayRecord.AddTimeStudied(timeStudied);
-                    todayRecord.IncrementFunds(coinsEarned);
-
-                    //Stop the study thread
-                    StudyState.StudyThreadRunning = false;
-                    StudyState.StudyThread.Join();
-
-                    //Reset UI
-                    FocusSelect.IsEnabled = true;
-                    StudyButton.Content = "Start Studying";
-                    string statusReportText = $"Total time studying {timeStudied}.\n" +
-                                              $"Earned {coinsEarned} Coins";
-                    StatusReport.Text = statusReportText;
-                    CoinCount.Text = PetState.GetBalance().ToString();
+                    //Exit the focus thread, using false to signal that you are in the main UI thread
+                    FocusModeExit(false);
                 }
 
+                //Study thread is in casual mode
                 else
                 {
-                    //Record net time studied
-                    TimeSpan timeStudied = StudyState.Timer.Elapsed;
-                    TimeSpan distractedTime = StudyState.DistractedTimer.Elapsed;
-                    TimeSpan netTimeStudied = timeStudied - distractedTime;
-
-                    //Reset the timer
-                    StudyState.Timer.Reset();
-                    StudyState.DistractedTimer.Reset();
-
-                    //Give the pet coins earned
-                    long coinsEarned = GivePetCoins(netTimeStudied);
-
-                    //Update the today's record
-                    DayRecord todayRecord = new DayRecord();
-                    todayRecord.AddTimeStudied(timeStudied);
-                    todayRecord.IncrementFunds(coinsEarned);
-
-                    //Stop the study thread
-                    StudyState.StudyThreadRunning = false;
-                    StudyState.StudyThread.Join();
-
-                    //Reset UI
-                    FocusSelect.IsEnabled = true;
-                    StudyButton.Content = "Start Studying";
-                    string statusReportText = $"Total time studying: {timeStudied}\n" +
-                                              $"Time Distracted: {distractedTime}\n" +
-                                              $"Net Time: {netTimeStudied}\n" +
-                                              $"Earned {coinsEarned} Coins";
-                    StatusReport.Text = statusReportText;
-                    CoinCount.Text = PetState.GetBalance().ToString();
+                    //Exit the casual thread
+                    CasualModeExit();
                 }
             }
 
@@ -458,6 +487,30 @@ namespace StudyBuddyDemo
                     StatusReport.Text = $"No information for {selectedDate.ToLongDateString()}";
                 }
             }
+        }
+
+        private void MainWindow_Closed(object sender, WindowEventArgs args)
+        {
+            //Ensures the threads are closed up on exit. If not, close em up
+            if(StudyState.StudyThreadRunning)
+            {
+                //Check which mode the study thread is in
+                if(StudyState.IsInFocusMode)
+                {
+                    //Ensure that the dialog box has the stop studying setting, pressed so program does not deadlock waiting for response
+                    StudyState.DialogResult = ContentDialogResult.Secondary;
+
+                    //Exit out of focused mode
+                    FocusModeExit(false);
+                }
+
+                else
+                {
+                    //Exit out of casual mode
+                    CasualModeExit();
+                }
+            }
+
         }
     }
 }
