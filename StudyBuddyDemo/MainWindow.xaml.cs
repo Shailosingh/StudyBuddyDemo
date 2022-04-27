@@ -189,6 +189,9 @@ namespace StudyBuddyDemo
                         //Make window stay on top
                         _presenter.IsAlwaysOnTop = true;
 
+                        //Disable Minimization
+                        _presenter.IsMinimizable = false;
+
                         //Pause the timer
                         StudyState.Timer.Stop();
 
@@ -214,6 +217,9 @@ namespace StudyBuddyDemo
 
                         //Stop making the window overlayed over everything as the dialog is over
                         _presenter.IsAlwaysOnTop = false;
+
+                        //Reenable minimization
+                        _presenter.IsMinimizable = true;
 
                         //Resume the timer
                         StudyState.Timer.Start();
